@@ -68,6 +68,11 @@ rule do.
    consecutive answers add no new facts or stories. 8–15 questions is a
    floor-and-ceiling hint, not a script.
 
+6. **Prefer dictated answers.** Voice-to-text (superwhisper or similar) beats
+   typing: spoken answers run longer, carry cadence, and yield more verbatim
+   tier-1 material for the draft. Capture the transcription as-is, false
+   starts included.
+
 ## Standing questions
 
 Reliable openers and probes, any stance:

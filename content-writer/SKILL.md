@@ -89,10 +89,12 @@ a script.
 
 Non-negotiables, whatever the protocol says:
 
-- Capture answers **verbatim**. Tell him to type fast and not polish. His
+- Capture answers **verbatim**. Dictation is the preferred input — spoken
+  answers run longer and carry his cadence, and every extra verbatim word is
+  tier-1 material for step 6. Typing works too: fast, unpolished. His
   unpolished answers are the raw material for every voice-load-bearing sentence
   in the post. They will be flat, hedged, and specific — **that flatness is the
-  voice.** Do not smooth it.
+  voice.** Do not smooth it; false starts and mid-sentence corrections stay.
 - Interview answers go into the working file — they are `--source` material.
 - If he declines to be interviewed, the post ships with `[NICK: ...]` markers
   where his inner life would go. That is a correct outcome, not a failure.
@@ -115,6 +117,14 @@ failed draft even if every gate passes.
 ### 5. Structure from the material
 
 Find the chronology or the argument already in the facts and follow it.
+
+Then sketch the outline before drafting: for each planned section, list the
+facts from the working file it draws on. A section that makes factual claims
+but has no facts behind it gets cut — or becomes a question back to Nick —
+before drafting, not written around. Sections whose job is argument (thesis,
+counterargument, stakes — the skeptic's material from the interview) are
+exempt: mark them as argument rather than padding them with citations. The
+outline is working material, not a deliverable.
 
 **Do not select a narrative framework.** `references/frameworks.md` exists as
 diagnostic vocabulary for talking about a draft that already exists — never as a
@@ -254,6 +264,7 @@ Deliver:
 3. The gate output, including the provenance split and the longest generated runs as retype targets
 4. Open questions
 5. Sources you couldn't read and links that didn't verify
+6. The working file — the claim → source ledger the draft was built from
 
 Then ask Nick exactly one feedback question: **"Anything the draft got wrong
 that I should never do again?"** If he answers, append the lesson to
@@ -275,8 +286,8 @@ ideas in my recent work?" Never implicitly.
 1. Read `references/idea-vault.md` first. Re-surface still-relevant `open`
    entries before scanning for new ones; never re-surface `dead` ones.
 2. Scan recent activity, most valuable sources first: git history across active
-   repos (7–14 days), session logs, Slack if available. Skip unavailable
-   sources silently.
+   repos (7–14 days), session logs, Granola meeting transcripts, Slack if
+   available. Skip unavailable sources silently.
 3. Score candidates against the five spike criteria: point of view, story
    potential, emotional intensity, lesson/framework, depth. A candidate needs
    at least two to make the list.

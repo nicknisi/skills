@@ -1,6 +1,6 @@
 # PRD: Content Machine Upgrades for the Blog Post Writer Skill
 
-**Status:** Approved for implementation
+**Status:** Implemented and verified live (commit `78a1e4e`, 2026-08-23). All six ACs pass; AC5 measured results recorded below.
 **Source:** [David Ondrej podcast with Alex Lieberman + Dan (10X)](https://www.youtube.com/watch?v=QBfXiWvM0qc), content machine segment ~16:00–32:00. Timestamped citations below. Captions were auto-generated; quotes are approximate.
 **Owner:** Nick Nisi
 **Target:** `skills/content-writer/` (this directory)
@@ -163,7 +163,7 @@ Ordered by value-to-cost. Each phase is independently shippable.
 - AC2 (F2): For a chosen topic, the brief contains all four sections; every contrarian angle cites a step-1 source; interview opens with a "questions only Nick can answer" item.
 - AC3 (F3): Lessons file exists, seeded; a draft session demonstrably reads it (lesson from the file is reflected as a constraint); hand-off asks the feedback question exactly once.
 - AC4 (F4): Idea sourcing runs only on explicit request; each presented idea names ≥2 spike criteria and evidence; unpicked ideas appear in the vault as `open`; a later run re-surfaces them.
-- AC5 (F5): In a completed draft, every sentence is traceable to one of the three priority tiers; generated connective sentences carry no unsourced claims; slopcheck passes structurally with the interiority list going to Nick as today. Measured: `slopcheck.ts --source <raw material>` on an F5-produced draft shows a verbatim+adapted fraction materially above the pre-F5 baseline (97% generated), with the remaining generated runs identifiable as claim-free connective tissue.
+- AC5 (F5): In a completed draft, every sentence is traceable to one of the three priority tiers; generated connective sentences carry no unsourced claims; slopcheck passes structurally with the interiority list going to Nick as today. Measured: `slopcheck.ts --source <raw material>` on an F5-produced draft shows a verbatim+adapted fraction materially above the pre-F5 baseline (97% generated), with the remaining generated runs identifiable as claim-free connective tissue. **Result (live retry, inside-the-harness):** arrangement-first redraft measured 33% verbatim / 16% adapted / 51% generated; Nick's Pangram retest went 91% AI → 14% AI, before his retype pass on the three remaining generated runs.
 - AC6 (NG1): No revision loop exists anywhere; slopcheck output remains a rewrite list; the skill still never delivers a "finished" post.
 
 ## 8. Risks
