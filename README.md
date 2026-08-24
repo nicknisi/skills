@@ -17,7 +17,7 @@ Skills live in the agent's context and are selected automatically based on the u
 
 | Skill | Description |
 |-------|-------------|
-| **content-writer** | Turn raw material into a blog post draft in Nick's voice. Researches, structures, and writes connective prose. Does not generate publishable first-person writing — facts only, no fabricated feelings. |
+| **content-machine** | Turn raw material into a blog post draft in Nick's voice. Researches, structures, and writes connective prose. Does not generate publishable first-person writing — facts only, no fabricated feelings. |
 | **diagnosing-bugs** | Diagnosis loop for hard bugs and performance regressions. Systematic root-cause analysis when something is broken, throwing, failing, or slow. |
 | **domain-modeling** | Build and sharpen a project's domain model. Use when discussing codebase terminology, writing or editing a `CONTEXT.md`, or recording an ADR. |
 | **eli5** | Explain a topic to a complete novice using an HTML artifact with big pictures and few words. Triggered by "eli5" or "explain like I'm 5." |
