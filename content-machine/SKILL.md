@@ -1,9 +1,9 @@
 ---
-name: blog-post-writer
-description: Turn Nick Nisi's raw material into a blog post draft in his voice. Use when the user says "write a blog post," "draft a post," "write about [topic]," "turn my notes into a blog post," or provides scattered ideas that need shaping — or when he asks "what should I write about?" / "any post ideas in my recent work?" (idea sourcing). Produces a deliberately flat draft with sourced facts and tagged gaps — never a finished post.
+name: content-machine
+description: Turn Nick Nisi's raw material into content drafts in his voice — blog posts and conference talks, primarily. Use when the user says "write a post," "draft a talk," "write about [topic]," "turn my notes into writing," or provides scattered ideas that need shaping — or when he asks "what should I write about?" / "any content ideas in my recent work?" (idea sourcing). Produces a deliberately flat draft with sourced facts and tagged gaps — never a finished post.
 ---
 
-# Nick Nisi Blog Writer
+# Nick Nisi Content Machine
 
 Turn raw material into a draft Nick finishes. This skill does research, structure,
 and connective prose. It does **not** produce publishable first-person writing.
