@@ -18,8 +18,16 @@ Explain the user's topic like they know nothing about it. Output is a single HTM
 
 ## Output
 
-Build one self-contained HTML artifact:
+Build one self-contained HTML document:
 
 - Large readable type, generous whitespace.
 - Simple inline SVG or CSS diagrams. No external images or libraries.
 - Friendly, warm tone. Short sentences.
+
+## Delivery
+
+Emit it with the `artifact` tool:
+
+- `action: create`, `kind: html`, a short `title`, and the full `<!DOCTYPE>` document as `content`. Full documents pass through verbatim and auto-open in the browser.
+- For revisions, `action: update` with the same title — open tabs live-reload.
+- Never write a loose `.html` file or open it via bash.
