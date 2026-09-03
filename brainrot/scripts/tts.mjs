@@ -35,8 +35,10 @@ async function fetchRetry(url, init, tries = 3) {
   for (let i = 0; i < tries; i++) {
     const res = await fetch(url, init);
     if (res.ok) return res;
-    last = new Error(`${res.status} ${res.statusText}: ${(await res.text()).slice(0, 300)}`);
+    const body = await res.text();
+    last = new Error(`${res.status} ${res.statusText}: ${body.slice(0, 300)}`);
     if (res.status < 500 && res.status !== 429) break;
+    if (res.status === 429 && /credit|quota|billing/i.test(body)) break;   // out of money, not out of rate
     await new Promise((r) => setTimeout(r, 800 * (i + 1)));
   }
   throw last;
