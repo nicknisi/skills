@@ -17,6 +17,7 @@ Skills live in the agent's context and are selected automatically based on the u
 
 | Skill | Description |
 |-------|-------------|
+| **brainrot** | Turn any topic, doc, or wall of text into "sludge content": a phone-shaped (9:16) page with a narrated ELI5 lesson (natural male TTS voice, word-by-word captions) on top and Minecraft-style 3D parkour underneath, synced to the lesson (new biome per beat, a stunt on each beat's key phrase). Triggered by "brainrot," "sludge," "subway surfers," "I can't focus on this," "read this to me." |
 | **content-machine** | Turn Nick Nisi's raw material into a blog post draft in his voice. Use when the user says "write a blog post," "draft a post," "write about [topic]," "turn my notes into a blog post," or provides scattered ideas that need shaping. Produces a deliberately flat draft with sourced facts and tagged gaps — never a finished post. |
 | **diagnosing-bugs** | Diagnosis loop for hard bugs and performance regressions. Systematic root-cause analysis when something is broken, throwing, failing, or slow. |
 | **domain-modeling** | Build and sharpen a project's domain model. Use when discussing codebase terminology, writing or editing a `CONTEXT.md`, or recording an ADR. |
