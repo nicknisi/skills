@@ -4,6 +4,9 @@
 //   node scripts/build.mjs beats.json --out /tmp/x.html --no-open
 //   node scripts/simulate.mjs /tmp/x.html [seconds=90] [chaos]
 //
+// If the page has embedded narration (beat.audio), a fake Audio element plays it under the
+// virtual clock so the clip path (seek, word timings, ended → next beat) gets exercised too.
+//
 // Runs the built page's script under a stub DOM and a proxy THREE with a virtual clock
 // (setTimeout/setInterval/requestAnimationFrame), ticks 60 fps for N simulated seconds,
 // and prints deaths, coins, landings, lanes used, beat/key/stunt cue counts, and whether
@@ -21,8 +24,18 @@ globalThis.setTimeout = (fn, ms = 0) => { timers.push({ id: tid, at: now + ms, f
 globalThis.setInterval = (fn, ms = 0) => { timers.push({ id: tid, at: now + ms, fn, every: ms }); return tid++; };
 globalThis.clearTimeout = globalThis.clearInterval = (id) => { timers = timers.filter((t) => t.id !== id); };
 globalThis.requestAnimationFrame = (cb) => { rafs.push(cb); return rafs.length; };
+const playing = new Set();
+class FakeAudio {
+  constructor() { this._src = ''; this.currentTime = 0; this.duration = NaN; this.paused = true; this.readyState = 0; this.playbackRate = 1; this.preload = ''; audioInstances++; }
+  set src(v) { this._src = v; this.readyState = 0; this.currentTime = 0; setTimeout(() => { this.readyState = 1; this.duration = 6.5; if (this.onloadedmetadata) this.onloadedmetadata(); }, 30); }
+  get src() { return this._src; }
+  play() { this.paused = false; playing.add(this); audioPlays++; return Promise.resolve(); }
+  pause() { this.paused = false; this.paused = true; playing.delete(this); }
+}
+let audioInstances = 0, audioPlays = 0, audioEnded = 0;
 function tick(ms) {
   now += ms;
+  for (const a of playing) { a.currentTime += (ms / 1000) * a.playbackRate; if (a.currentTime >= a.duration) { a.currentTime = a.duration; a.paused = true; playing.delete(a); audioEnded++; if (a.onended) a.onended(); } }
   for (;;) { const due = timers.filter((t) => t.at <= now).sort((a, b) => a.at - b.at)[0]; if (!due) break; if (due.every) due.at += due.every; else timers = timers.filter((t) => t !== due); due.fn(); }
   const cbs = rafs; rafs = []; for (const cb of cbs) cb(now);
 }
@@ -46,6 +59,7 @@ globalThis.window = globalThis; globalThis.matchMedia = () => ({ matches: false 
 const ls = new Map(); globalThis.localStorage = { getItem: (k) => (ls.has(k) ? ls.get(k) : null), setItem: (k, v) => ls.set(k, v) };
 globalThis.ResizeObserver = class { observe() {} }; globalThis.HTMLButtonElement = class {}; globalThis.Event = class { constructor(t) { this.type = t; } }; globalThis.KeyboardEvent = globalThis.Event;
 globalThis.devicePixelRatio = 1; globalThis.speechSynthesis = undefined; // → captions-only pacing drives the beats
+if (/"audio":"data:audio/.test(dataJson)) globalThis.Audio = FakeAudio;      // embedded narration → exercise the clip path
 const anyProxy = () => new Proxy(function () {}, { get(_, k) { if (k === Symbol.toPrimitive) return () => 0; if (k === 'then' || k === Symbol.iterator) return undefined; return anyProxy(); }, apply() { return anyProxy(); }, construct() { return anyProxy(); }, set() { return true; } });
 globalThis.THREE = anyProxy();
 el('brainrot-data').textContent = dataJson;
@@ -61,6 +75,7 @@ let maxY = 0, minY = 0, landings = 0, wasGrounded = true, lanesUsed = new Set(),
 const deathsBefore = () => sim.world.deaths;
 for (let t = 0; t < seconds * 1000; t += 1000 / 60) {
   tick(1000 / 60);
+  await null;                                              // let play().then(...) and friends run
   maxY = Math.max(maxY, sim.P.y); if (!sim.P.dead) minY = Math.min(minY, sim.P.y);
   if (!wasGrounded && sim.P.grounded) landings++; wasGrounded = sim.P.grounded;
   lanesUsed.add(sim.P.lane);
@@ -68,4 +83,4 @@ for (let t = 0; t < seconds * 1000; t += 1000 / 60) {
 }
 const counter = el('counter').textContent, finished = B.state.finished;
 const stats = B.runner.stats();
-console.log(JSON.stringify({ mode: chaos ? 'chaos' : 'normal', seconds, ...stats, speed: +(stats.dist / seconds).toFixed(1), landings, maxY: +maxY.toFixed(2), lanesUsed: [...lanesUsed].sort(), beatCues, keyCues, endCues, stuntsSeen, counter, finished, streak: el('streak').textContent, errorsLogged: logs.filter((l) => /error|Error/.test(l)).slice(0, 3), voidFalls: logs.filter((l) => l.includes('VOID')).length }));
+console.log(JSON.stringify({ mode: chaos ? 'chaos' : 'normal', seconds, audio: globalThis.Audio ? { plays: audioPlays, ended: audioEnded } : 'none', ...stats, speed: +(stats.dist / seconds).toFixed(1), landings, maxY: +maxY.toFixed(2), lanesUsed: [...lanesUsed].sort(), beatCues, keyCues, endCues, stuntsSeen, counter, finished, streak: el('streak').textContent, errorsLogged: logs.filter((l) => /error|Error/.test(l)).slice(0, 3), voidFalls: logs.filter((l) => l.includes('VOID')).length }));

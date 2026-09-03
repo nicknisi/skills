@@ -4,8 +4,10 @@
 // Zero dependencies. Works under `node build.mjs` (18+) and `bun build.mjs`.
 //
 //   node scripts/build.mjs <beats.json> [--out <file.html>] [--video <youtube id|url>] [--no-open]
+//                                [--tts auto|openai|elevenlabs|none] [--voice <name|id>] [--style "<instructions>"] [--no-align] [--no-cache]
 //
-// Reads assets/template.html, injects the JSON into the data island, writes the
+// Narrates the beats with a neural TTS when an API key is in the environment (see
+// tts.mjs) and embeds the audio + word timings into the page. Reads assets/template.html, injects the JSON into the data island, writes the
 // page (default: ~/.cache/brainrot/<slug>-<stamp>.html), opens it in the
 // default browser, and prints the path. The page loads three.js from cdnjs for
 // the 3D runner and falls back to a built-in 2D renderer when offline; YouTube
@@ -17,6 +19,7 @@ import * as os from "node:os";
 import * as process from "node:process";
 import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
+import { narrate, detectProvider, DEFAULT_STYLE } from "./tts.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const TEMPLATE = path.join(here, "..", "assets", "template.html");
@@ -25,18 +28,24 @@ const MAX_WORDS = 60; // warn above this; browsers' TTS gets flaky on long utter
 
 function usage(code) {
   console.error(
-    "usage: node build.mjs <beats.json> [--out <file.html>] [--video <youtube id|url>] [--no-open]",
+    "usage: node build.mjs <beats.json> [--out <file.html>] [--video <youtube id|url>] [--no-open]\n" +
+      "                     [--tts auto|openai|elevenlabs|none] [--voice <name|id>] [--style \"<instructions>\"] [--no-align] [--no-cache]",
   );
   process.exit(code);
 }
 
 function parseArgs(argv) {
-  const args = { input: null, out: null, video: null, open: true };
+  const args = { input: null, out: null, video: null, open: true, tts: "auto", voice: null, style: null, align: true, cache: true };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === "--out") args.out = argv[++i];
     else if (a === "--video") args.video = argv[++i];
     else if (a === "--no-open") args.open = false;
+    else if (a === "--tts") args.tts = argv[++i];
+    else if (a === "--voice") args.voice = argv[++i];
+    else if (a === "--style") args.style = argv[++i];
+    else if (a === "--no-align") args.align = false;
+    else if (a === "--no-cache") args.cache = false;
     else if (a === "-h" || a === "--help") usage(0);
     else if (a.startsWith("--")) {
       console.error(`unknown flag: ${a}`);
@@ -125,7 +134,7 @@ function openInBrowser(file) {
   child.unref();
 }
 
-function main() {
+async function main() {
   const args = parseArgs(process.argv.slice(2));
 
   let raw;
@@ -163,6 +172,18 @@ function main() {
     process.exit(1);
   }
 
+  // Narration: neural TTS when a key is available, otherwise the page uses the browser voice.
+  const provider = args.tts === "none" ? null : args.tts === "auto" ? detectProvider() : args.tts;
+  if (provider) {
+    console.error(`narrating ${data.beats.length} beats with ${provider}…`);
+    try {
+      data.tts = await narrate(data.beats, { provider, voice: args.voice, style: args.style || DEFAULT_STYLE, align: args.align, noCache: !args.cache }, (m) => console.error(m));
+    } catch (e) {
+      console.error(`TTS failed (${e.message.slice(0, 200)}); the page will use the browser voice`);
+      for (const b of data.beats) { delete b.audio; delete b.words; }
+    }
+  } else if (args.tts !== "none") console.error("no OPENAI_API_KEY or ELEVENLABS_API_KEY in the environment; the page will use the browser voice (noticeably worse)");
+
   let template;
   try {
     template = fs.readFileSync(TEMPLATE, "utf8");
@@ -190,11 +211,11 @@ function main() {
   console.error(
     `${data.beats.length} beats · ${data.beats.reduce((n, b) => n + wordCount(b.text), 0)} words · ${
       data.video && data.video.youtube ? "youtube " + data.video.youtube : "built-in runner"
-    }`,
+    } · ${data.tts ? `voice ${data.tts.provider}/${data.tts.voice}` : "browser voice"} · ${(html.length / 1048576).toFixed(1)} MB`,
   );
   if (args.open) openInBrowser(out);
 }
 
 const invokedDirectly =
   process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
-if (invokedDirectly) main();
+if (invokedDirectly) main().catch((e) => { console.error(e.message); process.exit(1); });

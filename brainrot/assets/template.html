@@ -348,7 +348,7 @@ function voices() { return synth ? synth.getVoices() : []; }
 // Edge's neural "Natural" voices, then Chrome's Google UK male, then macOS's better
 // male voices (Enhanced/Premium variants sort first when installed), then any English.
 const MALE = ['Christopher', 'Guy', 'Andrew', 'Brian', 'Eric', 'Roger', 'Steffan', 'Ryan', 'Thomas', 'Google UK English Male',
-  'Alex', 'Tom', 'Evan', 'Nathan', 'Aaron', 'Reed', 'Daniel', 'Arthur', 'Oliver', 'Lee', 'Rishi', 'David', 'Mark', 'Fred'];
+  'Alex', 'Tom', 'Evan', 'Nathan', 'Aaron', 'Daniel', 'Arthur', 'Oliver', 'Lee', 'Rishi', 'David', 'Mark'];
 function pickVoice() {
   const vs = voices(); if (!vs.length) return null;
   const en = vs.filter((v) => /^en/i.test(v.lang));
@@ -364,7 +364,9 @@ function pickVoice() {
   for (const v of en) { const s = score(v); if (s > bestS) { bestS = s; best = v; } }
   return best || en.find((v) => v.default) || en[0] || vs[0];
 }
-function showVoice() { const v = pickVoice(); $('#voice-info').textContent = v ? `voice: ${v.name.replace(/Microsoft |Online \(Natural\)|Google /g, '').trim()} · ${v.lang}` : 'voice: browser default'; }
+function showVoice() {
+  if (DATA.tts && beats.some((b) => b.audio)) { $('#voice-info').textContent = `voice: ${DATA.tts.provider} · ${DATA.tts.voice} (neural, pre-rendered)`; return; }
+  const v = pickVoice(); $('#voice-info').textContent = v ? `voice: ${v.name.replace(/Microsoft |Online \(Natural\)|Google /g, '').trim()} · ${v.lang}` : 'voice: browser default'; }
 // Chrome loads voices asynchronously; don't start the first beat with the wrong voice.
 function whenVoices(cb) {
   if (!synth || voices().length) return cb();
@@ -375,6 +377,7 @@ function stopSpeech() {
   seq++;
   if (estTimer) { clearInterval(estTimer); estTimer = null; }
   if (synth) synth.cancel();
+  stopClip();
 }
 // Timer-driven highlighter. Google's cloud voices in Chrome never fire word
 // boundaries, so we estimate; real boundary events take over if they show up.
@@ -399,9 +402,10 @@ function startEstimator(fromIdx, drivesCompletion) {
   }, 40);
   estTimer = handle;
 }
-function speakCurrent(fromIdx = 0) {
+function speakCurrent(fromIdx = 0, forceSynth = false) {
   stopSpeech();
   const mySeq = seq;
+  if (!forceSynth && player && beats[state.i].audio) return playClip(fromIdx, mySeq);
   const full = spokenText(beats[state.i]);
   const offset = fromIdx > 0 && wordStarts[fromIdx] != null ? wordStarts[fromIdx] : 0;
   const text = full.slice(offset);
@@ -433,6 +437,42 @@ function speakCurrent(fromIdx = 0) {
     if (mySeq !== seq || started) return;
     if (retries < 2) { retries++; speakCurrent(fromIdx); } else silentFallback('never started');
   }, 3000);
+}
+
+// ---------------- pre-rendered narration (neural TTS embedded by the build script) ----------------
+// beat.audio is a data URI; beat.words (optional) is the start time in ms of each word token.
+// Without word times, highlight position is proportional to character offset over the clip's duration.
+const player = typeof Audio !== 'undefined' ? new Audio() : null;
+if (player) { player.preload = 'auto'; if ('preservesPitch' in player) player.preservesPitch = true; }
+let clipTimer = null, clipSrc = null;
+function stopClip() { if (clipTimer) { clearInterval(clipTimer); clipTimer = null; } if (player && !player.paused) player.pause(); }
+function playClip(fromIdx, mySeq) {
+  const b = beats[state.i];
+  const words = Array.isArray(b.words) && b.words.length === wordEls.length ? b.words : null;
+  const chars = wordEls.map((e) => e.textContent.length + 1), total = chars.reduce((a, c) => a + c, 0);
+  const cum = []; chars.reduce((a, c, i) => ((cum[i] = a), a + c), 0);
+  const durMs = () => (isFinite(player.duration) ? player.duration : 0) * 1000;
+  const wordAt = (ms) => {
+    if (words) { let k = -1; while (k + 1 < words.length && words[k + 1] <= ms) k++; return k; }
+    const d = durMs(); if (!d) return -1;
+    let k = 0; while (k + 1 < cum.length && cum[k + 1] / total <= ms / d) k++; return k;
+  };
+  const fallback = (why) => { if (mySeq !== seq) return; console.warn('narration audio unavailable (' + why + '); using browser speech'); stopClip(); speakCurrent(fromIdx, true); };
+  const start = () => {
+    if (mySeq !== seq) return;
+    player.playbackRate = state.rate;
+    if (fromIdx > 0) player.currentTime = words ? words[fromIdx] / 1000 : (durMs() * cum[fromIdx]) / total / 1000;
+    else player.currentTime = 0;
+    player.play().then(() => {
+      if (mySeq !== seq) return;
+      clipTimer = setInterval(() => { if (mySeq !== seq) return stopClip(); const k = wordAt(player.currentTime * 1000); if (k >= 0) highlightIndex(k); }, 40);
+    }).catch((e) => fallback(e.name));
+  };
+  player.onended = () => { if (mySeq === seq) { stopClip(); onBeatSpoken(); } };
+  player.onerror = () => fallback('decode error');
+  if (clipSrc !== b.audio) { clipSrc = b.audio; player.src = b.audio; player.onloadedmetadata = start; }
+  else if (player.readyState >= 1) start();
+  else player.onloadedmetadata = start;
 }
 
 // ---------------- flow ----------------
@@ -496,9 +536,9 @@ const rateEl = $('#rate');
 rateEl.value = state.rate;
 const syncKnobs = () => { $('#rate-out').textContent = state.rate.toFixed(2) + '×'; };
 syncKnobs();
-rateEl.oninput = () => { state.rate = +rateEl.value; store.set('rate', state.rate); syncKnobs(); runner.setSpeed(state.rate); };
+rateEl.oninput = () => { state.rate = +rateEl.value; store.set('rate', state.rate); syncKnobs(); runner.setSpeed(state.rate); if (player) player.playbackRate = state.rate; };
 // Speech rate can't change mid-utterance; resume from the current word instead of the top.
-rateEl.onchange = () => { if (state.playing) speakCurrent(Math.max(0, activeIdx)); };
+rateEl.onchange = () => { if (state.playing && !(player && beats[state.i].audio)) speakCurrent(Math.max(0, activeIdx)); };
 
 function wireToggle(id, key, onChange) {
   const lab = $(id), box = lab.querySelector('input');

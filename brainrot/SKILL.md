@@ -24,8 +24,10 @@ jumping gaps and fences and sidestepping walls, forever (or real gameplay
 footage if the user supplies a YouTube link). The parkour is synced to the
 lesson: every beat recolors the world into a new biome, the beat's key phrase
 launches him off a slime block through an arc of coins, and finishing turns
-everything gold. Narration is a natural male voice picked automatically.
-The eyes have somewhere to go, so the ears can do the work.
+everything gold. Narration is pre-rendered with a neural TTS voice at build
+time (OpenAI or ElevenLabs, whichever key is in the environment), TikTok
+narrator energy, with word timings driving the captions. The eyes have
+somewhere to go, so the ears can do the work.
 
 You write the beats. A bundled script turns them into the page and opens it.
 
@@ -54,13 +56,18 @@ Pick focus whenever there is source material. Pick teach when there isn't.
    ```bash
    node <skill-dir>/scripts/build.mjs <beats.json> [--video <youtube url|id>] [--out <file>] [--no-open]
    ```
-   `<skill-dir>` is the directory containing this SKILL.md. The script prints
-   the output path (default `~/.cache/brainrot/<slug>-<stamp>.html`) and
-   opens it. Read its stderr: it warns about beats that are too long. Fix
-   those and rebuild before handing over.
+   `<skill-dir>` is the directory containing this SKILL.md. With
+   `OPENAI_API_KEY` (or `ELEVENLABS_API_KEY`) in the environment the script
+   narrates every beat with a neural voice first (about 10 to 30 seconds for
+   a dozen beats, roughly a cent, cached by text so rebuilds are free), then
+   prints the output path (default `~/.cache/brainrot/<slug>-<stamp>.html`)
+   and opens it. Read its stderr: it warns about beats that are too long or
+   whose `key` isn't in the text, and tells you which voice narrated. Fix
+   warnings and rebuild before handing over.
 4. Reply in one or two lines: the path, and "click to start, space pauses,
-   ⚙ for speed, C for smooth brain mode." The page is the deliverable.
-   Don't paste the lesson into chat.
+   ⚙ for speed, C for smooth brain mode." If the build fell back to the
+   browser voice, say so and name the missing key. The page is the
+   deliverable. Don't paste the lesson into chat.
 
 ## Beat schema
 
@@ -156,6 +163,17 @@ longer. Stop waiting longer at thirty seconds.")
   surfers". Don't guess a video id from memory: ids can't be verified
   without fetching, and the owner may have disabled embedding. The page has
   a paste box, so the user can supply one later either way.
+- `--tts auto|openai|elevenlabs|none` picks the narrator. `auto` (default)
+  uses ElevenLabs if its key is set, else OpenAI, else the browser voice.
+- `--voice <name|id>` overrides the voice: an OpenAI voice name (default
+  `ash`; `onyx`, `echo`, `verse` are the other male options) or an ElevenLabs
+  voice id (default: the first premade male voice on the account).
+- `--style "<instructions>"` replaces the OpenAI delivery instructions. The
+  default asks for a fast, upbeat TikTok narrator. Use it when the user wants
+  calmer or weirder.
+- `--no-align` skips whisper word alignment on OpenAI (captions then use
+  proportional timing; the key-phrase stunt may land a few hundred ms off).
+- `--no-cache` re-renders clips even if cached.
 - `--out <path>` overrides the default output location.
 - `--no-open` skips launching the browser.
 
@@ -169,13 +187,15 @@ longer. Stop waiting longer at thirty seconds.")
   also works once online. Nothing to fix in the beats.
 - **Browsers won't speak until the user clicks.** The page opens on a "tap to
   start" gate on purpose.
-- **The voice is picked by name, not chosen by the user.** The speech API has
-  no gender or quality metadata, so the page ranks known male voices (Edge's
-  neural "Natural" voices, Chrome's Google UK English Male, macOS's Alex, Tom,
-  Evan, Daniel and friends, Enhanced variants first) and falls back to any
-  English voice. There is no voice or pitch control by design. If the user
-  wants it more natural than any browser voice, that means pre-rendering
-  audio with a neural TTS API, which this skill doesn't do yet.
+- **Narration quality depends on a key being present.** With OpenAI or
+  ElevenLabs the voice is neural and TikTok-paced. Without a key the page
+  falls back to browser speech synthesis, ranked by name toward known male
+  voices, and on browsers without Google or Edge voices (Safari, Helium,
+  Brave, ungoogled Chromium) that means a compact macOS voice like Daniel,
+  which sounds robotic. Tell the user which happened. There is no voice or
+  pitch control in the page by design; use `--voice` and `--style`.
+- **Audio is embedded as data URIs**, so the page stays one file. A dozen
+  beats add roughly half a megabyte. The build prints the final size.
 - **Chrome's cloud voices don't report word boundaries.** The page estimates
   word timing for those; local voices (Samantha and friends on macOS)
   highlight exactly. Nothing to fix.
