@@ -177,6 +177,19 @@ longer. Stop waiting longer at thirty seconds.")
 - `--out <path>` overrides the default output location.
 - `--no-open` skips launching the browser.
 
+## Exporting a video
+
+The page has a 🎬 button (or press `E`) that records the whole lesson as a
+clean 1080×1920 file with narration and sound effects, ready to post. It
+uses the browser's tab capture: the share dialog opens, the user picks
+**this tab** (keep "share tab audio" on), the bar and cursor disappear, the
+lesson restarts from beat one, and about four seconds after GG the file
+lands in Downloads as `<slug>-9x16.mp4` (WebM on browsers that can't mux
+MP4). Clicking the red REC pill stops early. Works in Chromium browsers
+(Chrome, Helium, Brave, Edge, Arc); Safari and Firefox can capture but
+can't crop to the phone, so the export would include the page margins.
+Tell the user to leave the tab visible while it records.
+
 ## Gotchas
 
 - **Don't ship this through an Artifact tool.** Speech synthesis and the
@@ -196,6 +209,9 @@ longer. Stop waiting longer at thirty seconds.")
   pitch control in the page by design; use `--voice` and `--style`.
 - **Audio is embedded as data URIs**, so the page stays one file. A dozen
   beats add roughly half a megabyte. The build prints the final size.
+- **Export needs a click in the share dialog.** That's the browser's rule for
+  capturing a tab; it can't be automated. If the dialog shows other windows,
+  the user should pick the current tab, not the whole screen.
 - **Chrome's cloud voices don't report word boundaries.** The page estimates
   word timing for those; local voices (Samantha and friends on macOS)
   highlight exactly. Nothing to fix.

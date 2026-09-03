@@ -133,6 +133,13 @@
   #gate .small { margin-top: 14px; color: var(--text); font-size: 14px; padding: 0 20px; }
   #gate .small kbd { font: 12px var(--mono); background: #1a1a24; border: 1px solid var(--line); border-radius: 4px; padding: 1px 6px; }
 
+  body.exporting { cursor: none; }
+  body.exporting #bar, body.exporting #drawer { display: none !important; }
+  body.exporting #phone { height: 100dvh; width: calc(100dvh * 9 / 16); border-radius: 0; box-shadow: none; grid-template-rows: minmax(0, 1fr) minmax(0, 1fr); }
+  #export-pill { position: fixed; top: 12px; right: 14px; z-index: 9; display: flex; gap: 8px; align-items: center; padding: 8px 12px; border-radius: 999px; background: rgba(12,12,20,.92); border: 1px solid var(--line); font: 12px var(--mono); color: var(--text); cursor: pointer; user-select: none; }
+  #export-pill i { width: 8px; height: 8px; border-radius: 50%; background: var(--danger); box-shadow: 0 0 10px var(--danger); animation: blink 1s steps(2) infinite; }
+  #export-pill b { color: var(--danger); }
+  @keyframes blink { to { opacity: .2; } }
   .shake { animation: shake .3s linear; }
   @keyframes shake { 0%,100% { transform: translate(0,0); } 20% { transform: translate(-6px, 3px); } 40% { transform: translate(5px, -4px); } 60% { transform: translate(-4px, 2px); } 80% { transform: translate(3px, -2px); } }
   .done-card { text-align: center; }
@@ -182,6 +189,7 @@
     <button class="btn icon" id="next" title="Next beat (→)">▶</button>
     <button class="btn icon" id="restart" title="Restart (R)">↺</button>
     <button class="btn icon" id="src" title="Real gameplay footage from YouTube">📺</button>
+    <button class="btn icon" id="export" title="Export a clean 9:16 video (E)">🎬</button>
     <button class="btn icon" id="gear" title="Settings">⚙</button>
   </div>
 
@@ -201,6 +209,7 @@
 
   <div id="gate"><div><div class="big">tap to<br>start</div><div class="small">browsers refuse to talk until you click. <kbd>space</kbd> works too.</div></div></div>
 </div>
+<div id="export-pill" hidden title="Stop and save"><i></i>REC <b>0:00</b> · click to stop</div>
 
 <script id="brainrot-data" type="application/json"><!--BRAINROT_DATA--></script>
 <script>
@@ -475,6 +484,69 @@ function playClip(fromIdx, mySeq) {
   else player.onloadedmetadata = start;
 }
 
+// ---------------- export: record a clean 1080×1920 video of the whole lesson ----------------
+// Chrome-family only: getDisplayMedia(preferCurrentTab) captures this tab with its audio, Region
+// Capture crops the stream to #phone, frames are scaled onto a 1080×1920 canvas, and MediaRecorder
+// writes MP4 (H.264/AAC) when the browser can, else WebM. The bar, drawer and cursor are hidden
+// while recording; the REC pill lives outside #phone so the crop never sees it.
+const phone = $('#phone'), exportBtn = $('#export'), pill = $('#export-pill');
+let rec = null;
+const slug = (t) => String(t).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 48) || 'lesson';
+async function startExport() {
+  if (rec) return stopExport();
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia || typeof MediaRecorder === 'undefined') { sticker('NO CAPTURE API HERE', 2600); return; }
+  unlock(); setPlaying(false);
+  let stream;
+  try {
+    stream = await navigator.mediaDevices.getDisplayMedia({ video: { frameRate: 60 }, audio: true, preferCurrentTab: true, selfBrowserSurface: 'include', surfaceSwitching: 'exclude', systemAudio: 'exclude', monitorTypeSurfaces: 'exclude' });
+  } catch (e) { console.warn('export cancelled:', e.name); return; }
+  const vtrack = stream.getVideoTracks()[0];
+  document.body.classList.add('exporting'); openDrawer(false);
+  await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));      // let the layout settle at the new size
+  let cropped = false;
+  if (window.CropTarget && vtrack.cropTo) { try { await vtrack.cropTo(await CropTarget.fromElement(phone)); cropped = true; } catch (e) { console.warn('region crop unavailable; cropping manually', e.name); } }
+  const video = document.createElement('video'); video.muted = true; video.playsInline = true; video.srcObject = stream; await video.play();
+  const W = 1080, H = 1920, cv = document.createElement('canvas'); cv.width = W; cv.height = H; const cx = cv.getContext('2d');
+  const out = cv.captureStream(30);
+  for (const a of stream.getAudioTracks()) out.addTrack(a);
+  if (!stream.getAudioTracks().length) sticker('NO TAB AUDIO SHARED', 2600);
+  const mime = ['video/mp4;codecs=avc1.640028,mp4a.40.2', 'video/mp4;codecs=avc1,mp4a.40.2', 'video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm'].find((m) => MediaRecorder.isTypeSupported(m)) || '';
+  const chunks = [], mr = new MediaRecorder(out, { mimeType: mime || undefined, videoBitsPerSecond: 12e6, audioBitsPerSecond: 192e3 });
+  mr.ondataavailable = (e) => { if (e.data.size) chunks.push(e.data); };
+  let drawing = true;
+  const draw = () => {
+    if (!drawing) return;
+    const vw = video.videoWidth, vh = video.videoHeight;
+    if (vw && vh) {
+      let sx = 0, sy = 0, sw = vw, sh = vh;
+      if (!cropped) { const r = phone.getBoundingClientRect(), k = vw / window.innerWidth; sx = r.left * k; sy = r.top * k; sw = r.width * k; sh = r.height * k; }
+      const k = Math.min(W / sw, H / sh), dw = sw * k, dh = sh * k;
+      cx.fillStyle = '#0b0b10'; cx.fillRect(0, 0, W, H);
+      cx.drawImage(video, sx, sy, sw, sh, (W - dw) / 2, (H - dh) / 2, dw, dh);
+    }
+    if (video.requestVideoFrameCallback) video.requestVideoFrameCallback(draw); else requestAnimationFrame(draw);
+  };
+  draw();
+  const t0 = Date.now(), timer = setInterval(() => { const s = Math.round((Date.now() - t0) / 1000); pill.querySelector('b').textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; }, 500);
+  rec = { mr, stream, video, mime, chunks, halt: () => { drawing = false; clearInterval(timer); } };
+  pill.hidden = false; exportBtn.classList.add('on'); state.exporting = true;
+  vtrack.onended = () => stopExport();                                                   // "Stop sharing" in the browser UI
+  mr.start(1000);
+  setTimeout(restart, 600);                                                               // a clean first frame, then the lesson from the top
+}
+async function stopExport() {
+  if (!rec) return;
+  const { mr, stream, video, mime, chunks, halt } = rec; rec = null; state.exporting = false;
+  pill.hidden = true; exportBtn.classList.remove('on'); document.body.classList.remove('exporting');
+  await new Promise((r) => { if (mr.state === 'inactive') return r(); mr.onstop = r; mr.stop(); });
+  halt(); stream.getTracks().forEach((t) => t.stop()); video.srcObject = null;
+  const blob = new Blob(chunks, { type: (mime.split(';')[0]) || 'video/webm' }), ext = blob.type.includes('mp4') ? 'mp4' : 'webm';
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `${slug(DATA.title)}-9x16.${ext}`;
+  document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 5000);
+  sticker(`SAVED .${ext.toUpperCase()}`, 2600);
+}
+exportBtn.onclick = startExport; pill.onclick = stopExport;
+
 // ---------------- flow ----------------
 function goTo(i, speak) {
   state.i = Math.max(0, Math.min(beats.length - 1, i));
@@ -515,6 +587,7 @@ function finish() {
     <button class="btn primary" id="again">↺ run it back</button></div>`;
   $('#again').onclick = restart;
   sfx.gg(); runner.celebrate(); setCaption('GG');
+  if (state.exporting) setTimeout(stopExport, 4500);
   ['GG', 'W', 'LOCKED IN', 'ABSORBED', 'CERTIFIED', 'BRAIN: SMOOTH'].forEach((w, k) => setTimeout(() => sticker(w), k * 220));
 }
 function restart() {
@@ -562,6 +635,7 @@ addEventListener('keydown', (e) => {
   else if (e.key === 'c' || e.key === 'C') flipToggle('#t-chaos');
   else if (e.key === 'm' || e.key === 'M') flipToggle('#t-sfx');
   else if (e.key === 'Escape') openDrawer(false);
+  else if (e.key === 'e' || e.key === 'E') startExport();
 });
 const drawer = $('#drawer');
 function openDrawer(open = !drawer.classList.contains('open')) { drawer.classList.toggle('open', open); }
