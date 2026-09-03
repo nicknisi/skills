@@ -496,6 +496,8 @@ async function startExport() {
   if (rec) return stopExport();
   if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia || typeof MediaRecorder === 'undefined') { sticker('NO CAPTURE API HERE', 2600); return; }
   unlock(); setPlaying(false);
+  // Browser speech synthesis is produced by the OS, outside the tab's audio; tab capture can't record it.
+  if (!(player && beats.some((b) => b.audio))) { sticker('BROWSER VOICE WON\'T RECORD', 3200); console.warn('export: narration is browser speech, which tab capture cannot hear; build with a TTS key for audio'); }
   let stream;
   try {
     stream = await navigator.mediaDevices.getDisplayMedia({ video: { frameRate: 60 }, audio: true, preferCurrentTab: true, selfBrowserSurface: 'include', surfaceSwitching: 'exclude', systemAudio: 'exclude', monitorTypeSurfaces: 'exclude' });
