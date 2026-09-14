@@ -27,6 +27,7 @@ Skills live in the agent's context and are selected automatically based on the u
 | **llms-visibility** | Make websites, docs, blogs, or landing pages visible and readable to LLMs and AI agents. Covers `llms.txt`, Markdown content negotiation, `Link` headers, and `Content-Signal` in `robots.txt`. |
 | **research** | Investigate a question against high-trust primary sources and capture findings as a Markdown file in the repo. Delegated to background agents when legwork is needed. |
 | **scandinavian-design** | Apply a refined Scandinavian visual system with a neutral black-and-white foundation, restrained sans-serif typography, purposeful product imagery, generous spacing, and clear page choreography. |
+| **session-reflect** | Reflect on prompting habits, repeated corrections, and delegation using the sessions MCP server. Produces cited observations and workflow experiments without automatically changing memory or instructions. |
 | **show-me** | Help the user understand the current topic visually with concise diagrams, code-shape sketches, and focused HTML artifacts. |
 | **triage** | Move issues and external PRs through a state machine of triage roles, categorise, verify, grill if needed, and write agent-ready briefs. |
 | **unslop** | Cut AI tells from any writing. Scans prose for statistically overrepresented AI writing patterns and rewrites flagged sections. |
