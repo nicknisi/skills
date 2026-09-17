@@ -1,9 +1,12 @@
 ---
 name: research
-description: Investigate a question against high-trust primary sources and capture the findings as a Markdown file in the repo. Use when the user wants a topic researched, docs or API facts gathered, or reading legwork delegated to a background agent.
+description: Explicitly requested research workflow that delegates primary-source investigation to a background agent and saves a Markdown report. Use only when the user explicitly invokes this skill or requests this delegated research workflow.
+disable-model-invocation: true
 ---
 
-Spin up a **background agent** to do the research, so you keep working while it reads.
+Run this workflow only when the user explicitly invokes this skill or requests delegated research with a saved report. Reading or automatically selecting this skill is not permission to delegate or create files. For ordinary questions and documentation lookups, investigate directly and answer without starting this workflow.
+
+When explicitly requested, dispatch one **background agent** to do the research, so you keep working while it reads.
 
 Its job:
 

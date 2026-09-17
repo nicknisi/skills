@@ -1,6 +1,7 @@
 ---
 name: ai-news
 description: Fetch and curate AI news from X/Twitter list into a whimsical, animated HTML artifact. Use when user asks for AI news, AI digest, what's happening in AI, or wants a summary of AI announcements, papers, and releases.
+disable-model-invocation: true
 ---
 
 # AI News Digest

@@ -1,6 +1,7 @@
 ---
 name: llms-visibility
 description: 'Make websites, docs, blogs, or landing pages visible and readable to LLMs and AI agents — ChatGPT, Claude, Perplexity, Cursor, Claude Code, and other coding agents that fetch URLs. Use this for any request involving llms.txt, llms-full.txt, serving .md/Markdown versions of pages, Accept text/markdown content negotiation, Link rel="alternate" headers, Cloudflare Content-Signal in robots.txt, GEO (generative engine optimization), AI-friendly / AI-readable / LLM-discoverable sites, getting cited in ChatGPT or Perplexity answers, or fixing pages where AI tools fetch JavaScript bundles or empty React roots instead of content. Also use to push back on debunked patterns: ai.txt, AI meta tags, hidden HTML comments, AI toggle buttons, User-Agent sniffing, JSON-LD aimed at LLMs. Do NOT use for traditional Google SEO, sitemap.xml, schema.org rich snippets for search engines, WCAG/accessibility audits, or CSP/security headers.'
+disable-model-invocation: true
 ---
 
 # Make a website visible to LLMs

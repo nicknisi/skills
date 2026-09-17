@@ -1,6 +1,7 @@
 ---
 name: unslop
-description: Cut AI tells from any writing. Must always apply.
+description: Edit writing to remove AI patterns and improve its voice. Use only when the user explicitly invokes this skill or requests an Unslop editing pass.
+disable-model-invocation: true
 ---
 
 # Unslop

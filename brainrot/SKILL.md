@@ -12,6 +12,7 @@ description: >
   skim. Also for "eli5 with audio" or "narrate this". NOT FOR: a plain summary
   or TL;DR, a serious reference document, a diagram-first explanation (use
   eli5 or show-me), or deep comprehension with quizzes (use explain-this).
+disable-model-invocation: true
 ---
 
 # Brainrot
@@ -34,8 +35,8 @@ You write the beats. A bundled script turns them into the page and opens it.
 ## Two modes
 
 **teach** — the user names a topic and you write the lesson. If the topic is a
-real API, library, spec, or CLI, fetch the docs first (WebFetch, or the
-`defuddle` skill for articles) so method names and flags are real and current.
+real API, library, spec, or CLI, fetch the docs first (fetch_content) so
+method names and flags are real and current.
 Remembered API surfaces are where narrated lessons go wrong, and a confident
 voice reading a wrong flag is worse than a hedge.
 
@@ -226,7 +227,7 @@ Tell the user to leave the tab visible while it records.
   general knowledge (no API surface to verify).
 - "/brainrot ./docs/ARCHITECTURE.md" → focus, read the file, chunk faithfully.
 - "I can't focus on this RFC, https://… just read it to me with the subway
-  surfers thing" → focus, fetch with `defuddle`, chunk; mention the paste
+  surfers thing" → focus, fetch with fetch_content, chunk; mention the paste
   box if they want real footage.
 - "teach me tanstack router loaders, make it dumb" → teach, fetch the docs
   first, then write; `code` fields carry the real function names.

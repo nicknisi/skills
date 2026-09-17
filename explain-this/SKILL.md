@@ -9,8 +9,8 @@ description: >
   is this really saying, break this down, review my cards, explain-this review,
   explain-this interview. NOT FOR: plain summarization when the user only wants
   a TL;DR, writing new content, reviewing code for defects, explaining a diff
-  or PR (use explain-diff), or quizzing on work just completed (use
-  socratic-tutor).
+  or PR, or quizzing on work just completed.
+disable-model-invocation: true
 ---
 
 # Explain This

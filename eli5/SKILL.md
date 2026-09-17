@@ -1,6 +1,7 @@
 ---
 name: eli5
 description: Explain a topic to a complete novice using an HTML artifact with big pictures and few words. Use when the user says "eli5", "explain like I'm 5", or asks for a beginner-friendly visual explanation of any topic.
+disable-model-invocation: true
 ---
 
 # ELI5
