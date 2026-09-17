@@ -23,8 +23,7 @@ and reuse existing assignments, not restart the task.
 
 Briefly name the bottleneck and what help will address it, then act without
 asking permission for delegation within the requested scope. Existing approval
-gates still apply. If Riker owns the outcome, steer that owner instead of
-starting a competing team. A child without dispatch tools should return useful
+gates still apply. A child without dispatch tools should return useful
 work and delegation requests to its parent, never shell out to bypass the limit.
 
 ## Choose models by the work
