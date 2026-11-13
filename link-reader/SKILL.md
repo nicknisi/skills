@@ -1,11 +1,11 @@
 ---
 name: link-reader
-description: Fetch tweets, Twitter/X articles, and Reddit posts via proxy APIs. Use when the user provides a twitter.com, x.com, or reddit.com URL, or asks to read a tweet, post, article, or thread from Twitter/X or Reddit.
+description: Fetch readable content from URLs. Tweets, Twitter/X articles, and Reddit posts go through proxy APIs, and other web pages (blog posts, articles, docs) are fetched as markdown when the site supports it. Use when the user provides a URL to read, or when you need the contents of any web page, including as a step inside a larger task.
 ---
 
 # Link Reader
 
-Read content from URLs that block direct web fetching by routing through proxy APIs.
+Read content from URLs as clean text. Platforms that block direct fetching go through proxy APIs. Other pages are fetched as markdown when the site offers it.
 
 ## Supported Platforms
 
@@ -127,6 +127,22 @@ Top comments:
 ```
 
 Show the top 5 comments by default. Offer to show more if the user asks.
+
+### Other web pages
+
+For any URL not covered above, try these in order and stop at the first that returns markdown:
+
+1. Request the URL with an `Accept: text/markdown` header and check the response `Content-Type`. Many doc sites (Anthropic, Mintlify, Cloudflare-hosted sites) return markdown this way.
+
+   ```sh
+   curl -sL -H 'Accept: text/markdown' -w '\n%{content_type}\n' "$URL"
+   ```
+
+2. Request the URL with `.md` appended (strip a trailing `/` first).
+3. Use the harness's web fetch tool, which converts HTML to text. In pi, call `web_enable` first if the fetch tools are not loaded.
+4. Only if all of that fails, fetch the HTML and extract the main `<article>` or `<main>` element yourself.
+
+A `200` response is not enough: a server that ignores the header returns `text/html`, so check the content type.
 
 ## Adding New Platforms
 
