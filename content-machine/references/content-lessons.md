@@ -18,6 +18,10 @@ Entry format:
 
 ---
 
+## 2026-11-04 — fruit-fly-code-review (social launch posts)
+- **Lesson:** Social promo posts (X, LinkedIn) are not flat drafts: lead with a hook worth clicking, and fun, snark, or edge is welcome. The facts still need sources and the feelings still have to be Nick's.
+- **Evidence:** Nick on the first round of release-post drafts: "I want it to be compelling to click on. It can be fun, a little snarky, edgy, whatever, to do that."
+
 ## 2026-08-23 — inside-the-harness (Pangram retest)
 - **Lesson:** Restyling generated prose cannot make it read human — raise the verbatim-Nick fraction or hand the span to Nick to retype.
 - **Evidence:** Nick: "this post scores like 90% AI-written." Pangram scored the de-telled post 91% AI; the segments it called human were exactly his verbatim Slack quotes. `slopcheck.ts --source` measured the prose 97% generated against his raw material. Outcome: the arrangement-first redraft (33% verbatim, interview answers as skeleton) scored 14% AI on Nick's Pangram retest, before his retype pass.
